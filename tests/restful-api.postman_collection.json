@@ -1,0 +1,1318 @@
+{
+  "info": {
+    "name": "restful-api-app",
+    "description": "Uji API mahasiswa, fakultas, prodi, dan dosen. Jalankan berurutan: Prodi memakai fakultasId dari folder Fakultas, Dosen memakai prodiId dari folder Prodi.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Umum",
+      "item": [
+        {
+          "name": "Route dasar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('pesan server', () => pm.expect(pm.response.text()).to.eql('Server Express.js berjalan!'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/"
+          }
+        },
+        {
+          "name": "Rute tidak dikenal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('Rute GET /tidak-ada tidak ditemukan'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/tidak-ada"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mahasiswa",
+      "item": [
+        {
+          "name": "Daftar mahasiswa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('berupa array berisi id, nama, jurusan', () => {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data).to.be.an('array').that.is.not.empty;",
+                  "  data.forEach((m) => pm.expect(m).to.include.all.keys('id', 'nama', 'jurusan'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/mahasiswa"
+          }
+        },
+        {
+          "name": "Filter mahasiswa per jurusan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('semua hasil berjurusan Informatika', () => {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data).to.be.an('array').that.is.not.empty;",
+                  "  data.forEach((m) => pm.expect(m.jurusan).to.eql('Informatika'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/mahasiswa?jurusan=Informatika"
+          }
+        },
+        {
+          "name": "Detail mahasiswa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('id sesuai', () => pm.expect(pm.response.json().id).to.eql(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/mahasiswa/1"
+          }
+        },
+        {
+          "name": "Detail mahasiswa tidak ada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('Data tidak ditemukan'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/mahasiswa/9999"
+          }
+        },
+        {
+          "name": "Tambah mahasiswa tanpa API key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('API key tidak valid'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/mahasiswa",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Citra\",\n  \"jurusan\": \"Sistem Informasi\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah mahasiswa dengan API key salah",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('API key tidak valid'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "kunci-salah"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/mahasiswa",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Citra\",\n  \"jurusan\": \"Sistem Informasi\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah mahasiswa tanpa jurusan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('nama dan jurusan wajib diisi'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/mahasiswa",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Citra\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah mahasiswa dengan JSON rusak",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('Format JSON tidak valid'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/mahasiswa",
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"nama\": \"Citra\", ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah mahasiswa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('data tersimpan dan punya id', () => {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data.id).to.be.a('number');",
+                  "  pm.expect(data.nama).to.eql('Citra');",
+                  "  pm.expect(data.jurusan).to.eql('Sistem Informasi');",
+                  "  pm.collectionVariables.set('mahasiswaId', data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/mahasiswa",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Citra\",\n  \"jurusan\": \"Sistem Informasi\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Detail mahasiswa baru",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('nama sesuai', () => pm.expect(pm.response.json().nama).to.eql('Citra'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/mahasiswa/{{mahasiswaId}}"
+          }
+        },
+        {
+          "name": "Ubah mahasiswa tanpa API key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('API key tidak valid'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/mahasiswa/{{mahasiswaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Citra Dewi\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ubah mahasiswa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('nama berubah, field lain tetap', () => {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data.id).to.eql(pm.collectionVariables.get('mahasiswaId'));",
+                  "  pm.expect(data.nama).to.eql('Citra Dewi');",
+                  "  pm.expect(data.jurusan).to.eql('Sistem Informasi');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/mahasiswa/{{mahasiswaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Citra Dewi\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ubah mahasiswa tidak ada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('Data tidak ditemukan'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/mahasiswa/9999",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Tidak Ada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Hapus mahasiswa tanpa API key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('API key tidak valid'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/mahasiswa/{{mahasiswaId}}"
+          }
+        },
+        {
+          "name": "Hapus mahasiswa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));",
+                  "pm.test('tanpa body', () => pm.expect(pm.response.text()).to.eql(''));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/mahasiswa/{{mahasiswaId}}"
+          }
+        },
+        {
+          "name": "Detail mahasiswa setelah dihapus",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/mahasiswa/{{mahasiswaId}}"
+          }
+        },
+        {
+          "name": "Hapus mahasiswa yang sudah dihapus",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('Data tidak ditemukan'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/mahasiswa/{{mahasiswaId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fakultas",
+      "item": [
+        {
+          "name": "Daftar fakultas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('berupa array berisi id dan nama', () => {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data).to.be.an('array').that.is.not.empty;",
+                  "  data.forEach((f) => pm.expect(f).to.include.all.keys('id', 'nama'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/fakultas"
+          }
+        },
+        {
+          "name": "Detail fakultas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('id sesuai', () => pm.expect(pm.response.json().id).to.eql(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/fakultas/1"
+          }
+        },
+        {
+          "name": "Detail fakultas tidak ada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('Fakultas tidak ditemukan'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/fakultas/9999"
+          }
+        },
+        {
+          "name": "Tambah fakultas tanpa API key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('API key tidak valid'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/fakultas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Fakultas Uji\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah fakultas tanpa nama",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('nama wajib diisi'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/fakultas",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah fakultas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('data tersimpan dan punya id', () => {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data.id).to.be.a('number');",
+                  "  pm.expect(data.nama).to.eql('Fakultas Uji');",
+                  "  pm.collectionVariables.set('fakultasId', data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/fakultas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Fakultas Uji\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Detail fakultas baru",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('nama sesuai', () => pm.expect(pm.response.json().nama).to.eql('Fakultas Uji'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/fakultas/{{fakultasId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Prodi",
+      "item": [
+        {
+          "name": "Daftar prodi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('berupa array berisi id, nama, jenjang, fakultasId', () => {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data).to.be.an('array').that.is.not.empty;",
+                  "  data.forEach((p) => pm.expect(p).to.include.all.keys('id', 'nama', 'jenjang', 'fakultasId'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/prodi"
+          }
+        },
+        {
+          "name": "Filter prodi per fakultas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('semua hasil milik fakultas 1', () => {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data).to.be.an('array').that.is.not.empty;",
+                  "  data.forEach((p) => pm.expect(p.fakultasId).to.eql(1));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/prodi?fakultasId=1"
+          }
+        },
+        {
+          "name": "Detail prodi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('id sesuai', () => pm.expect(pm.response.json().id).to.eql(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/prodi/1"
+          }
+        },
+        {
+          "name": "Detail prodi tidak ada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('Prodi tidak ditemukan'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/prodi/9999"
+          }
+        },
+        {
+          "name": "Tambah prodi tanpa API key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('API key tidak valid'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/prodi",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Prodi Uji\",\n  \"jenjang\": \"S1\",\n  \"fakultasId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah prodi tanpa jenjang",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('nama, jenjang, dan fakultasId wajib diisi'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/prodi",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Prodi Uji\",\n  \"fakultasId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah prodi dengan fakultasId tidak ada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('fakultasId tidak ditemukan'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/prodi",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Prodi Uji\",\n  \"jenjang\": \"S1\",\n  \"fakultasId\": 9999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah prodi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('data tersimpan di fakultas yang baru dibuat', () => {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data.id).to.be.a('number');",
+                  "  pm.expect(data.nama).to.eql('Prodi Uji');",
+                  "  pm.expect(data.fakultasId).to.eql(pm.collectionVariables.get('fakultasId'));",
+                  "  pm.collectionVariables.set('prodiId', data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/prodi",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Prodi Uji\",\n  \"jenjang\": \"S1\",\n  \"fakultasId\": {{fakultasId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Detail prodi baru",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('nama sesuai', () => pm.expect(pm.response.json().nama).to.eql('Prodi Uji'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/prodi/{{prodiId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dosen",
+      "item": [
+        {
+          "name": "Daftar dosen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('berupa array berisi id, nama, nip, prodiId', () => {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data).to.be.an('array').that.is.not.empty;",
+                  "  data.forEach((d) => pm.expect(d).to.include.all.keys('id', 'nama', 'nip', 'prodiId'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/dosen"
+          }
+        },
+        {
+          "name": "Filter dosen per prodi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('semua hasil milik prodi 1', () => {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data).to.be.an('array').that.is.not.empty;",
+                  "  data.forEach((d) => pm.expect(d.prodiId).to.eql(1));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/dosen?prodiId=1"
+          }
+        },
+        {
+          "name": "Detail dosen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('id sesuai', () => pm.expect(pm.response.json().id).to.eql(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/dosen/1"
+          }
+        },
+        {
+          "name": "Detail dosen tidak ada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/dosen/9999"
+          }
+        },
+        {
+          "name": "Tambah dosen tanpa API key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('API key tidak valid'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/dosen",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Dosen Uji, M.Kom.\",\n  \"nip\": \"333333\",\n  \"prodiId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah dosen tanpa nip",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('nama, nip, dan prodiId wajib diisi'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/dosen",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Dosen Uji, M.Kom.\",\n  \"prodiId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah dosen dengan prodiId tidak ada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('pesan error sesuai', () => pm.expect(pm.response.json().message).to.eql('prodiId tidak ditemukan'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/dosen",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Dosen Uji, M.Kom.\",\n  \"nip\": \"333333\",\n  \"prodiId\": 9999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah dosen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('data tersimpan di prodi yang baru dibuat', () => {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data.id).to.be.a('number');",
+                  "  pm.expect(data.nip).to.eql('333333');",
+                  "  pm.expect(data.prodiId).to.eql(pm.collectionVariables.get('prodiId'));",
+                  "  pm.collectionVariables.set('dosenId', data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/dosen",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Dosen Uji, M.Kom.\",\n  \"nip\": \"333333\",\n  \"prodiId\": {{prodiId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Detail dosen baru",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('nama sesuai', () => pm.expect(pm.response.json().nama).to.eql('Dosen Uji, M.Kom.'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/dosen/{{dosenId}}"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "mahasiswaId",
+      "value": ""
+    },
+    {
+      "key": "fakultasId",
+      "value": ""
+    },
+    {
+      "key": "prodiId",
+      "value": ""
+    },
+    {
+      "key": "dosenId",
+      "value": ""
+    }
+  ]
+}
