@@ -10,7 +10,7 @@ exports.getAll = (req, res) => {
 exports.getById = (req, res, next) => {
   const id = parseInt(req.params.id);
   const data = dosenModel.getById(id);
-  if (!data) return next(errorHttp(404, 'Prodi tidak ditemukan'));
+  if (!data) return next(errorHttp(404, 'Dosen tidak ditemukan'));
   res.json(data);
 };
 
