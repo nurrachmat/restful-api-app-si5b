@@ -4,6 +4,8 @@ const Prodi = require('../models/prodiModel');
 
 const LIMIT_DEFAULT = 10;
 const LIMIT_MAKS = 50;
+const FIELD_SORT = ['nama', 'nim', 'createdAt'];
+const FIELD_BOLEH_DIPILIH = ['nama', 'nim', 'alamat', 'prodiId', 'createdAt'];
 
 // Mengubah bilangan dari query string menjadi bilangan bulat yang aman
 function angkaAman(nilai, bawaan, min, maks) {
@@ -34,15 +36,39 @@ exports.getAll = async (req, res) => {
 
   const page = angkaAman(req.query.page, 1, 1, Number.MAX_SAFE_INTEGER);
   const limit = angkaAman(req.query.limit, LIMIT_DEFAULT, 1, LIMIT_MAKS);
+
+  // Sorting: ?sort=nama (naik) atau ?sort=-nama (turun). Bawaan: terbaru dulu
+  const sortParam = String(req.query.sort || '-createdAt');
+  const arah = sortParam.startsWith('-') ? -1 : 1;
+  const sortField = sortParam.replace(/^-/, '');
+  if (!FIELD_SORT.includes(sortField)) {
+    throw errorHttp(400, `sort hanya boleh: ${FIELD_SORT.join(', ')}`);
+  }
+
+  // Projection: ?fields=nama,nim
+  let select = '';
+  if (req.query.fields) {
+    const fields = String(req.query.fields).split(',').map((f) => f.trim());
+    if (!fields.every((f) => FIELD_BOLEH_DIPILIH.includes(f))) {
+      throw errorHttp(400, `fields hanya boleh: ${FIELD_BOLEH_DIPILIH.join(', ')}`);
+    }
+    select = fields.join(' ');
+  }
   
-  const [data, total] = await Promise.all([
-    Mahasiswa.find(filter)
-      .populate('prodiId', 'kode nama')
-      .sort({ createdAt: -1, _id: 1 })
-      .skip((page - 1) * limit)
-      .limit(limit),
-    Mahasiswa.countDocuments(filter),
-  ]);
+    const query = Mahasiswa.find(filter)
+    .select(select)
+    .sort({ [sortField]: arah, _id: 1 })
+    .skip((page - 1) * limit)
+    .limit(limit);
+
+  // populate() otomatis menambahkan prodiId ke hasil, jadi hanya dipanggil
+  // bila prodiId memang diminta (atau bila tidak ada pemilihan field)
+  if (!select || select.split(' ').includes('prodiId')) {
+    query.populate('prodiId', 'kode nama');
+  }
+
+  const [data, total] = await Promise.all([query, Mahasiswa.countDocuments(filter)]);
+  
   res.json({ data, page, limit, total, totalPages: Math.ceil(total / limit) });
 };
 
