@@ -19,7 +19,7 @@ exports.register = async (req, res) => {
 
   const hashed = await bcrypt.hash(password, SALT_ROUNDS);
   const user = await User.create({ username, password: hashed });
-  res.status(201).json({ id: user._id, username: user.username });
+  res.status(201).json({ id: user._id, username: user.username, role: user.role });
 };
 
 exports.login = async (req, res) => {
@@ -36,7 +36,7 @@ exports.login = async (req, res) => {
   if (!cocok) throw errorHttp(401, 'Username atau password salah');
 
   const token = jwt.sign(
-    { id: user._id, username: user.username },
+    { id: user._id, username: user.username, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
   );
@@ -45,5 +45,5 @@ exports.login = async (req, res) => {
 
 // Contoh endpoint yang membaca data pengguna dari token
 exports.me = (req, res) => {
-  res.json({ id: req.user.id, username: req.user.username, berlakuSampai: new Date(req.user.exp * 1000) });
+  res.json({ id: req.user.id, username: req.user.username, role: req.user.role, berlakuSampai: new Date(req.user.exp * 1000) });
 };
